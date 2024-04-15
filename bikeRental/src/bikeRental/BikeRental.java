@@ -28,8 +28,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.SwingConstants;
 import java.awt.Color;
-import java.awt.event.ItemListener;
-import java.awt.event.ItemEvent;
 import java.awt.Font;
 
 class ConnectionSingleton {
@@ -68,9 +66,9 @@ public class BikeRental {
 	private JButton btnDeleteBike;
 	private int selectedUser;
 	private int selectedBike;
-	private static JComboBox comboBoxCodUserRent;
-	private static JComboBox comboBoxCodBikeRent;
-	private static JComboBox comboBoxCodUserReturn;
+	private static JComboBox<Integer> comboBoxCodUserRent;
+	private static JComboBox<Integer> comboBoxCodBikeRent;
+	private static JComboBox<Integer> comboBoxCodUserReturn;
 	private static JLabel lblCodBikeReturn;
 	private JLabel lblBikes;
 
@@ -175,15 +173,15 @@ public class BikeRental {
 		lblCodBikeReturn.setBounds(756, 373, 70, 15);
 		frmBikerental.getContentPane().add(lblCodBikeReturn);
 
-		comboBoxCodUserRent = new JComboBox();
+		comboBoxCodUserRent = new JComboBox<Integer>();
 		comboBoxCodUserRent.setBounds(605, 338, 117, 22);
 		frmBikerental.getContentPane().add(comboBoxCodUserRent);
 
-		comboBoxCodBikeRent = new JComboBox();
+		comboBoxCodBikeRent = new JComboBox<Integer>();
 		comboBoxCodBikeRent.setBounds(605, 369, 117, 22);
 		frmBikerental.getContentPane().add(comboBoxCodBikeRent);
 		
-		comboBoxCodUserReturn = new JComboBox();
+		comboBoxCodUserReturn = new JComboBox<Integer>();
 		comboBoxCodUserReturn.setBounds(756, 338, 117, 22);
 		frmBikerental.getContentPane().add(comboBoxCodUserReturn);
 
@@ -315,7 +313,7 @@ public class BikeRental {
 					ins_pstmt.setInt(2, Integer.parseInt(textFieldAge.getText()));
 					if (checkER(textFieldBankAccount.getText(), "^[A-Z]{2}[0-9]{22}$")) {
 						ins_pstmt.setString(3, textFieldBankAccount.getText());
-						int rowsInserted = ins_pstmt.executeUpdate();
+						ins_pstmt.executeUpdate();
 						ins_pstmt.close();
 						refresh();
 					} else {
@@ -339,7 +337,7 @@ public class BikeRental {
 				try {
 					con = ConnectionSingleton.getConnection("bikeRental");
 					PreparedStatement ins_pstmt = con.prepareStatement("insert into bikes () values ();");
-					int rowsInserted = ins_pstmt.executeUpdate();
+					ins_pstmt.executeUpdate();
 					ins_pstmt.close();
 					refresh();
 				} catch (SQLException e) {
@@ -468,7 +466,7 @@ public class BikeRental {
 					if (checkER(textFieldBankAccount.getText(), "^[A-Z]{2}[0-9]{22}$")) {
 						upd_pstmt.setString(3, textFieldBankAccount.getText());
 						upd_pstmt.setInt(4, selectedUser);
-						int rowsUpdated = upd_pstmt.executeUpdate();
+						upd_pstmt.executeUpdate();
 						upd_pstmt.close();
 						refresh();
 					}
@@ -491,7 +489,7 @@ public class BikeRental {
 				try {
 					PreparedStatement dele_pstmt = con.prepareStatement("DELETE FROM users WHERE coduser = ?");
 					dele_pstmt.setInt(1, selectedUser);
-					int rowsDeleted = dele_pstmt.executeUpdate();
+					dele_pstmt.executeUpdate();
 					dele_pstmt.close();
 					refresh();
 				} catch (SQLException e) {
@@ -510,7 +508,7 @@ public class BikeRental {
 				try {
 					PreparedStatement dele_pstmt = con.prepareStatement("DELETE FROM bikes WHERE codbike = ?");
 					dele_pstmt.setInt(1, selectedBike);
-					int rowsDeleted = dele_pstmt.executeUpdate();
+					dele_pstmt.executeUpdate();
 					dele_pstmt.close();
 					refresh();
 				} catch (SQLException e) {
