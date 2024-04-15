@@ -30,6 +30,7 @@ import javax.swing.SwingConstants;
 import java.awt.Color;
 import java.awt.event.ItemListener;
 import java.awt.event.ItemEvent;
+import java.awt.Font;
 
 class ConnectionSingleton {
 	private static Connection con;
@@ -70,7 +71,8 @@ public class BikeRental {
 	private static JComboBox comboBoxCodUserRent;
 	private static JComboBox comboBoxCodBikeRent;
 	private static JComboBox comboBoxCodUserReturn;
-	private JLabel lblCodBikeReturn;
+	private static JLabel lblCodBikeReturn;
+	private JLabel lblBikes;
 
 	public static void refresh() {
 		Statement stmt;
@@ -80,7 +82,7 @@ public class BikeRental {
 		try {
 			con = ConnectionSingleton.getConnection("bikeRental");
 			stmt = con.createStatement();
-			
+
 			rs = stmt.executeQuery("SELECT * FROM users");
 			while (rs.next()) {
 				Object[] row = new Object[5];
@@ -91,7 +93,7 @@ public class BikeRental {
 				row[4] = rs.getString("bike");
 				model1.addRow(row);
 			}
-			
+
 			rs = stmt.executeQuery("SELECT * FROM bikes");
 			while (rs.next()) {
 				Object[] row2 = new Object[3];
@@ -100,36 +102,36 @@ public class BikeRental {
 				row2[2] = rs.getInt("rating");
 				model2.addRow(row2);
 			}
-			
+
 			comboBoxCodUserRent.removeAllItems();
 			comboBoxCodBikeRent.removeAllItems();
 			comboBoxCodUserReturn.removeAllItems();
-			
-			rs = stmt.executeQuery("SELECT coduser FROM users");
+
+			rs = stmt.executeQuery("SELECT coduser FROM users where bike is null");
 			while (rs.next()) {
 				int coduser = rs.getInt("coduser");
 				comboBoxCodUserRent.addItem(coduser);
 			}
-			
-			rs = stmt.executeQuery("SELECT codbike FROM bikes");
+
+			rs = stmt.executeQuery("SELECT codbike FROM bikes WHERE rented is false");
 			while (rs.next()) {
 				int codbike = rs.getInt("codbike");
 				comboBoxCodBikeRent.addItem(codbike);
 			}
-			
-			rs = stmt.executeQuery("SELECT coduser FROM users WHERE bike <> null");
+
+			rs = stmt.executeQuery("SELECT coduser FROM users WHERE bike IS NOT NULL");
 			while (rs.next()) {
 				int coduser = rs.getInt("coduser");
 				comboBoxCodUserReturn.addItem(coduser);
 			}
-			
+
 		} catch (SQLException e) {
 			System.err.println(e.getMessage());
 			e.getErrorCode();
 			e.printStackTrace();
 		}
 	}
-	
+
 	public static boolean checkER(String text, String er) {
 		Pattern pat = Pattern.compile(er);
 		Matcher mat = pat.matcher(text);
@@ -168,18 +170,22 @@ public class BikeRental {
 		frmBikerental.setBounds(100, 100, 1000, 500);
 		frmBikerental.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmBikerental.getContentPane().setLayout(null);
-		
+
 		lblCodBikeReturn = new JLabel("");
 		lblCodBikeReturn.setBounds(756, 373, 70, 15);
 		frmBikerental.getContentPane().add(lblCodBikeReturn);
-		
+
 		comboBoxCodUserRent = new JComboBox();
 		comboBoxCodUserRent.setBounds(605, 338, 117, 22);
 		frmBikerental.getContentPane().add(comboBoxCodUserRent);
-		
+
 		comboBoxCodBikeRent = new JComboBox();
 		comboBoxCodBikeRent.setBounds(605, 369, 117, 22);
 		frmBikerental.getContentPane().add(comboBoxCodBikeRent);
+		
+		comboBoxCodUserReturn = new JComboBox();
+		comboBoxCodUserReturn.setBounds(756, 338, 117, 22);
+		frmBikerental.getContentPane().add(comboBoxCodUserReturn);
 
 		model1 = new DefaultTableModel();
 		model1.addColumn("Coduser");
@@ -197,7 +203,7 @@ public class BikeRental {
 			con = ConnectionSingleton.getConnection("bikeRental");
 			Statement stmt = con.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM users");
-			
+
 			while (rs.next()) {
 				Object[] row = new Object[5];
 				row[0] = rs.getInt("coduser");
@@ -207,7 +213,7 @@ public class BikeRental {
 				row[4] = rs.getString("bike");
 				model1.addRow(row);
 			}
-			
+
 			rs = stmt.executeQuery("SELECT * FROM bikes");
 			while (rs.next()) {
 				Object[] row2 = new Object[3];
@@ -216,21 +222,20 @@ public class BikeRental {
 				row2[2] = rs.getInt("rating");
 				model2.addRow(row2);
 			}
-			
 
-			rs = stmt.executeQuery("SELECT coduser FROM users");
+			rs = stmt.executeQuery("SELECT coduser FROM users where bike is null");
 			while (rs.next()) {
 				int coduser = rs.getInt("coduser");
 				comboBoxCodUserRent.addItem(coduser);
 			}
-			
-			rs = stmt.executeQuery("SELECT codbike FROM bikes");
+
+			rs = stmt.executeQuery("SELECT codbike FROM bikes WHERE rented is false");
 			while (rs.next()) {
 				int codbike = rs.getInt("codbike");
 				comboBoxCodBikeRent.addItem(codbike);
 			}
-			
-			rs = stmt.executeQuery("SELECT coduser FROM users WHERE bike <> null");
+
+			rs = stmt.executeQuery("SELECT coduser FROM users WHERE bike IS NOT NULL");
 			while (rs.next()) {
 				int coduser = rs.getInt("coduser");
 				comboBoxCodUserReturn.addItem(coduser);
@@ -240,7 +245,7 @@ public class BikeRental {
 			e.getErrorCode();
 			e.printStackTrace();
 		}
-		
+
 		tableUsers = new JTable(model1);
 		tableUsers.addMouseListener(new MouseAdapter() {
 			@Override
@@ -260,11 +265,11 @@ public class BikeRental {
 
 		tableBikes = new JTable(model2);
 		tableBikes.addMouseListener(new MouseAdapter() {
-		    @Override
-		    public void mouseClicked(MouseEvent e) {
-		        int i = tableBikes.getSelectedRow();
-		        selectedBike = (int) model2.getValueAt(i, 0);
-		    }
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				int i = tableBikes.getSelectedRow();
+				selectedBike = (int) model2.getValueAt(i, 0);
+			}
 		});
 		tableBikes.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 
@@ -314,7 +319,9 @@ public class BikeRental {
 						ins_pstmt.close();
 						refresh();
 					} else {
-		                JOptionPane.showMessageDialog(frmBikerental, "The bank account number does not comply with the required format.", "Error", JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(frmBikerental,
+								"The bank account number does not comply with the required format.", "Error",
+								JOptionPane.ERROR_MESSAGE);
 					}
 				} catch (SQLException e) {
 					System.err.println(e.getMessage());
@@ -357,20 +364,21 @@ public class BikeRental {
 		btnRentBike.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				try {
-		                	PreparedStatement updBike_pstmt = con.prepareStatement("UPDATE bikes SET rented = true WHERE codbike = ?");
-		                	updBike_pstmt.setInt(1, (int) comboBoxCodBikeRent.getSelectedItem());
-		                	updBike_pstmt.executeUpdate();
-		                	
-		                	PreparedStatement upd_user_pstmt = con.prepareStatement("UPDATE users SET bike = ?, rentalStartTime = ? WHERE coduser = ?");
-		                	upd_user_pstmt.setInt(1, (int) comboBoxCodBikeRent.getSelectedItem());
-		                	upd_user_pstmt.setString(2, LocalDateTime.now().toString());
-		                	upd_user_pstmt.setInt(3, (int) comboBoxCodUserRent.getSelectedItem());
-		                	upd_user_pstmt.executeUpdate();
-		                	upd_user_pstmt.close();
-		                	updBike_pstmt.close();
-							refresh();
-		                
-		            
+					PreparedStatement updBike_pstmt = con
+							.prepareStatement("UPDATE bikes SET rented = true WHERE codbike = ?");
+					updBike_pstmt.setInt(1, (int) comboBoxCodBikeRent.getSelectedItem());
+					updBike_pstmt.executeUpdate();
+
+					PreparedStatement upd_user_pstmt = con
+							.prepareStatement("UPDATE users SET bike = ?, rentalStartTime = ? WHERE coduser = ?");
+					upd_user_pstmt.setInt(1, (int) comboBoxCodBikeRent.getSelectedItem());
+					upd_user_pstmt.setString(2, LocalDateTime.now().toString());
+					upd_user_pstmt.setInt(3, (int) comboBoxCodUserRent.getSelectedItem());
+					upd_user_pstmt.executeUpdate();
+					upd_user_pstmt.close();
+					updBike_pstmt.close();
+					refresh();
+
 				} catch (SQLException e) {
 					System.err.println(e.getMessage());
 					e.getErrorCode();
@@ -380,7 +388,7 @@ public class BikeRental {
 		});
 		btnRentBike.setBounds(605, 402, 117, 25);
 		frmBikerental.getContentPane().add(btnRentBike);
-		
+
 		JLabel lblCost = new JLabel("");
 		lblCost.setForeground(Color.RED);
 		lblCost.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -391,44 +399,54 @@ public class BikeRental {
 		btnReturnBike.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				try {
+					PreparedStatement sel_pstmt = con
+							.prepareStatement("SELECT bike FROM users WHERE coduser = ?");
+					sel_pstmt.setInt(1, (int) comboBoxCodUserReturn.getSelectedItem());
+					ResultSet rs = sel_pstmt.executeQuery();
+					if (rs.next()) {
+						selectedBike = rs.getInt("bike");
+					}
+					
 					PreparedStatement updUser_pstmt = con
 							.prepareStatement("UPDATE users SET bike = null WHERE coduser = ?");
 					updUser_pstmt.setInt(1, (int) comboBoxCodUserReturn.getSelectedItem());
 					updUser_pstmt.executeUpdate();
 					updUser_pstmt.close();
-					PreparedStatement updBike_pstmt = con.prepareStatement("UPDATE bikes SET rented = false WHERE codbike = ?");
+					PreparedStatement updBike_pstmt = con
+							.prepareStatement("UPDATE bikes SET rented = false WHERE codbike = ?");
 					updBike_pstmt.setInt(1, selectedBike);
-					updBike_pstmt.executeQuery();
+					updBike_pstmt.executeUpdate();
 					updBike_pstmt.close();
-					
-					
-					PreparedStatement sel_pstmt = con.prepareStatement("SELECT rentalStartTime FROM users WHERE coduser = ?");
-		            sel_pstmt.setInt(1, (int) comboBoxCodUserReturn.getSelectedItem());
-		            ResultSet rs = sel_pstmt.executeQuery();
-		            LocalDateTime rentalStartTime = null;
-		            if (rs.next()) {
-		                rentalStartTime = LocalDateTime.parse(rs.getString("rentalStartTime"));
-		            }
-		            sel_pstmt.close();
-		         
-		            long durationSeconds = Duration.between(rentalStartTime, LocalDateTime.now()).getSeconds();
-		            double rentalCost = durationSeconds * 0.02;
-		            lblCost.setText(rentalCost + "€");
-					
-					String[] options = {"1", "2", "3", "4", "5"};
-		            JComboBox<String> comboBox = new JComboBox<>(options);
-		            int option = JOptionPane.showOptionDialog(null, comboBox, "Select Rating",
-		                    JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, null, null);
-		            if (option == JOptionPane.OK_OPTION) {
-		                int selectedRating = Integer.parseInt((String) comboBox.getSelectedItem());
-		                
-		                PreparedStatement upd_pstmt = con.prepareStatement("UPDATE bikes SET rating = ? WHERE codbike = ?");
-		                upd_pstmt.setInt(1, selectedRating);
-		                upd_pstmt.setInt(2, (int) comboBoxCodUserReturn.getSelectedItem());
-		                upd_pstmt.executeUpdate();
-		                upd_pstmt.close();
-		            }
-		            refresh();
+
+					sel_pstmt = con
+							.prepareStatement("SELECT rentalStartTime FROM users WHERE coduser = ?");
+					sel_pstmt.setInt(1, (int) comboBoxCodUserReturn.getSelectedItem());
+					rs = sel_pstmt.executeQuery();
+					LocalDateTime rentalStartTime = null;
+					if (rs.next()) {
+						rentalStartTime = LocalDateTime.parse(rs.getString("rentalStartTime"));
+					}
+					sel_pstmt.close();
+
+					long durationSeconds = Duration.between(rentalStartTime, LocalDateTime.now()).getSeconds();
+					double rentalCost = durationSeconds * 0.02;
+					lblCost.setText(rentalCost + "€");
+
+					String[] options = { "1", "2", "3", "4", "5" };
+					JComboBox<String> comboBox = new JComboBox<>(options);
+					int option = JOptionPane.showOptionDialog(null, comboBox, "Select Rating",
+							JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, null, null);
+					if (option == JOptionPane.OK_OPTION) {
+						int selectedRating = Integer.parseInt((String) comboBox.getSelectedItem());
+
+						PreparedStatement upd_pstmt = con
+								.prepareStatement("UPDATE bikes SET rating = ? WHERE codbike = ?");
+						upd_pstmt.setInt(1, selectedRating);
+						upd_pstmt.setInt(2, (int) comboBoxCodUserReturn.getSelectedItem());
+						upd_pstmt.executeUpdate();
+						upd_pstmt.close();
+					}
+					refresh();
 				} catch (SQLException e) {
 					System.err.println(e.getMessage());
 					e.getErrorCode();
@@ -443,7 +461,8 @@ public class BikeRental {
 		btnUpdateUser.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				try {
-					PreparedStatement upd_pstmt = con.prepareStatement("UPDATE users SET name = ?, age = ?, bankAccount = ? WHERE coduser = ?");
+					PreparedStatement upd_pstmt = con
+							.prepareStatement("UPDATE users SET name = ?, age = ?, bankAccount = ? WHERE coduser = ?");
 					upd_pstmt.setString(1, textFieldName.getText());
 					upd_pstmt.setInt(2, Integer.parseInt(textFieldAge.getText()));
 					if (checkER(textFieldBankAccount.getText(), "^[A-Z]{2}[0-9]{22}$")) {
@@ -453,7 +472,9 @@ public class BikeRental {
 						upd_pstmt.close();
 						refresh();
 					}
-	                JOptionPane.showMessageDialog(frmBikerental, "The bank account number does not comply with the required format.", "Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(frmBikerental,
+							"The bank account number does not comply with the required format.", "Error",
+							JOptionPane.ERROR_MESSAGE);
 				} catch (SQLException e) {
 					System.err.println(e.getMessage());
 					e.getErrorCode();
@@ -470,7 +491,7 @@ public class BikeRental {
 				try {
 					PreparedStatement dele_pstmt = con.prepareStatement("DELETE FROM users WHERE coduser = ?");
 					dele_pstmt.setInt(1, selectedUser);
-					int rowsDeleted =dele_pstmt.executeUpdate();
+					int rowsDeleted = dele_pstmt.executeUpdate();
 					dele_pstmt.close();
 					refresh();
 				} catch (SQLException e) {
@@ -489,7 +510,7 @@ public class BikeRental {
 				try {
 					PreparedStatement dele_pstmt = con.prepareStatement("DELETE FROM bikes WHERE codbike = ?");
 					dele_pstmt.setInt(1, selectedBike);
-					int rowsDeleted =dele_pstmt.executeUpdate();
+					int rowsDeleted = dele_pstmt.executeUpdate();
 					dele_pstmt.close();
 					refresh();
 				} catch (SQLException e) {
@@ -502,8 +523,16 @@ public class BikeRental {
 		btnDeleteBike.setBounds(756, 301, 117, 25);
 		frmBikerental.getContentPane().add(btnDeleteBike);
 		
-		comboBoxCodUserReturn = new JComboBox();
-		comboBoxCodUserReturn.setBounds(756, 338, 117, 22);
-		frmBikerental.getContentPane().add(comboBoxCodUserReturn);
+		JLabel lblUser = new JLabel("Users");
+		lblUser.setFont(new Font("Tahoma", Font.BOLD, 18));
+		lblUser.setHorizontalAlignment(SwingConstants.CENTER);
+		lblUser.setBounds(205, 36, 114, 14);
+		frmBikerental.getContentPane().add(lblUser);
+		
+		lblBikes = new JLabel("Bikes");
+		lblBikes.setHorizontalAlignment(SwingConstants.CENTER);
+		lblBikes.setFont(new Font("Tahoma", Font.BOLD, 18));
+		lblBikes.setBounds(681, 36, 93, 14);
+		frmBikerental.getContentPane().add(lblBikes);
 	}
 }
