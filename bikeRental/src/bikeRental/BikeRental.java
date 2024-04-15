@@ -117,7 +117,7 @@ public class BikeRental {
 				comboBoxCodBikeRent.addItem(codbike);
 			}
 			
-			rs = stmt.executeQuery("SELECT coduser FROM users WHERE bike <> false");
+			rs = stmt.executeQuery("SELECT coduser FROM users WHERE bike <> null");
 			while (rs.next()) {
 				int coduser = rs.getInt("coduser");
 				comboBoxCodUserReturn.addItem(coduser);
@@ -180,28 +180,6 @@ public class BikeRental {
 		comboBoxCodBikeRent = new JComboBox();
 		comboBoxCodBikeRent.setBounds(605, 369, 117, 22);
 		frmBikerental.getContentPane().add(comboBoxCodBikeRent);
-		
-		comboBoxCodUserReturn = new JComboBox();
-		comboBoxCodUserReturn.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent arg0) {
-				try {
-					PreparedStatement sel_pstmt = con.prepareStatement("Select bike from users where coduser = ?");
-					sel_pstmt.setInt(1, (int) comboBoxCodUserReturn.getSelectedItem());
-					ResultSet rs = sel_pstmt.executeQuery();
-					if (rs.next()) {
-						lblCodBikeReturn.setText(rs.getString("bike"));	
-					}
-					sel_pstmt.close();
-					refresh();
-				} catch (SQLException e) {
-					System.err.println(e.getMessage());
-					e.getErrorCode();
-					e.printStackTrace();
-				}
-			}
-		});
-		comboBoxCodUserReturn.setBounds(756, 338, 117, 22);
-		frmBikerental.getContentPane().add(comboBoxCodUserReturn);
 
 		model1 = new DefaultTableModel();
 		model1.addColumn("Coduser");
@@ -238,9 +216,8 @@ public class BikeRental {
 				row2[2] = rs.getInt("rating");
 				model2.addRow(row2);
 			}
-			comboBoxCodUserRent.removeAllItems();
-			comboBoxCodBikeRent.removeAllItems();
-			comboBoxCodUserReturn.removeAllItems();
+			
+
 			rs = stmt.executeQuery("SELECT coduser FROM users");
 			while (rs.next()) {
 				int coduser = rs.getInt("coduser");
@@ -253,7 +230,7 @@ public class BikeRental {
 				comboBoxCodBikeRent.addItem(codbike);
 			}
 			
-			rs = stmt.executeQuery("SELECT coduser FROM users WHERE bike <> false");
+			rs = stmt.executeQuery("SELECT coduser FROM users WHERE bike <> null");
 			while (rs.next()) {
 				int coduser = rs.getInt("coduser");
 				comboBoxCodUserReturn.addItem(coduser);
@@ -263,8 +240,6 @@ public class BikeRental {
 			e.getErrorCode();
 			e.printStackTrace();
 		}
-		
-		
 		
 		tableUsers = new JTable(model1);
 		tableUsers.addMouseListener(new MouseAdapter() {
@@ -526,5 +501,9 @@ public class BikeRental {
 		});
 		btnDeleteBike.setBounds(756, 301, 117, 25);
 		frmBikerental.getContentPane().add(btnDeleteBike);
+		
+		comboBoxCodUserReturn = new JComboBox();
+		comboBoxCodUserReturn.setBounds(756, 338, 117, 22);
+		frmBikerental.getContentPane().add(comboBoxCodUserReturn);
 	}
 }
