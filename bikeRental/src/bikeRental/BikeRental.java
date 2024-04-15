@@ -28,6 +28,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.SwingConstants;
 import java.awt.Color;
+import java.awt.event.ItemListener;
+import java.awt.event.ItemEvent;
 
 class ConnectionSingleton {
 	private static Connection con;
@@ -68,7 +70,7 @@ public class BikeRental {
 	private static JComboBox comboBoxCodUserRent;
 	private static JComboBox comboBoxCodBikeRent;
 	private static JComboBox comboBoxCodUserReturn;
-	private static JComboBox comboBoxCodBikeReturn;
+	private JLabel lblCodBikeReturn;
 
 	public static void refresh() {
 		Statement stmt;
@@ -99,6 +101,10 @@ public class BikeRental {
 				model2.addRow(row2);
 			}
 			
+			comboBoxCodUserRent.removeAllItems();
+			comboBoxCodBikeRent.removeAllItems();
+			comboBoxCodUserReturn.removeAllItems();
+			
 			rs = stmt.executeQuery("SELECT coduser FROM users");
 			while (rs.next()) {
 				int coduser = rs.getInt("coduser");
@@ -115,12 +121,6 @@ public class BikeRental {
 			while (rs.next()) {
 				int coduser = rs.getInt("coduser");
 				comboBoxCodUserReturn.addItem(coduser);
-			}
-			
-			rs = stmt.executeQuery("SELECT codbike FROM bikes WHERE rented = true");
-			while (rs.next()) {
-				int codbike = rs.getInt("codbike");
-				comboBoxCodBikeReturn.addItem(codbike);
 			}
 			
 		} catch (SQLException e) {
@@ -169,6 +169,10 @@ public class BikeRental {
 		frmBikerental.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmBikerental.getContentPane().setLayout(null);
 		
+		lblCodBikeReturn = new JLabel("");
+		lblCodBikeReturn.setBounds(756, 373, 70, 15);
+		frmBikerental.getContentPane().add(lblCodBikeReturn);
+		
 		comboBoxCodUserRent = new JComboBox();
 		comboBoxCodUserRent.setBounds(605, 338, 117, 22);
 		frmBikerental.getContentPane().add(comboBoxCodUserRent);
@@ -178,12 +182,26 @@ public class BikeRental {
 		frmBikerental.getContentPane().add(comboBoxCodBikeRent);
 		
 		comboBoxCodUserReturn = new JComboBox();
+		comboBoxCodUserReturn.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent arg0) {
+				try {
+					PreparedStatement sel_pstmt = con.prepareStatement("Select bike from users where coduser = ?");
+					sel_pstmt.setInt(1, (int) comboBoxCodUserReturn.getSelectedItem());
+					ResultSet rs = sel_pstmt.executeQuery();
+					if (rs.next()) {
+						lblCodBikeReturn.setText(rs.getString("bike"));	
+					}
+					sel_pstmt.close();
+					refresh();
+				} catch (SQLException e) {
+					System.err.println(e.getMessage());
+					e.getErrorCode();
+					e.printStackTrace();
+				}
+			}
+		});
 		comboBoxCodUserReturn.setBounds(756, 338, 117, 22);
 		frmBikerental.getContentPane().add(comboBoxCodUserReturn);
-		
-		comboBoxCodBikeReturn = new JComboBox();
-		comboBoxCodBikeReturn.setBounds(756, 369, 117, 22);
-		frmBikerental.getContentPane().add(comboBoxCodBikeReturn);
 
 		model1 = new DefaultTableModel();
 		model1.addColumn("Coduser");
@@ -223,7 +241,6 @@ public class BikeRental {
 			comboBoxCodUserRent.removeAllItems();
 			comboBoxCodBikeRent.removeAllItems();
 			comboBoxCodUserReturn.removeAllItems();
-			comboBoxCodBikeReturn.removeAllItems();
 			rs = stmt.executeQuery("SELECT coduser FROM users");
 			while (rs.next()) {
 				int coduser = rs.getInt("coduser");
@@ -240,12 +257,6 @@ public class BikeRental {
 			while (rs.next()) {
 				int coduser = rs.getInt("coduser");
 				comboBoxCodUserReturn.addItem(coduser);
-			}
-			
-			rs = stmt.executeQuery("SELECT codbike FROM bikes WHERE rented = true");
-			while (rs.next()) {
-				int codbike = rs.getInt("codbike");
-				comboBoxCodBikeReturn.addItem(codbike);
 			}
 		} catch (SQLException e) {
 			System.err.println(e.getMessage());
@@ -411,7 +422,7 @@ public class BikeRental {
 					updUser_pstmt.executeUpdate();
 					updUser_pstmt.close();
 					PreparedStatement updBike_pstmt = con.prepareStatement("UPDATE bikes SET rented = false WHERE codbike = ?");
-					updBike_pstmt.setInt(1, (int) comboBoxCodBikeReturn.getSelectedItem());
+					updBike_pstmt.setInt(1, selectedBike);
 					updBike_pstmt.executeQuery();
 					updBike_pstmt.close();
 					
