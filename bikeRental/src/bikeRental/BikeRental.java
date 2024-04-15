@@ -7,6 +7,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,6 +26,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import javax.swing.SwingConstants;
+import java.awt.Color;
 
 class ConnectionSingleton {
 	private static Connection con;
@@ -198,6 +202,7 @@ public class BikeRental {
 		    public void mouseClicked(MouseEvent e) {
 		        int i = tableBikes.getSelectedRow();
 		        selectedBike = (int) model2.getValueAt(i, 0);
+		        textFieldCodBike.setText(model2.getValueAt(i, 0).toString());
 		    }
 		});
 		tableBikes.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
@@ -242,11 +247,14 @@ public class BikeRental {
 							.prepareStatement("insert into users (name, age, bankAccount) VALUES (?, ?, ?)");
 					ins_pstmt.setString(1, textFieldName.getText());
 					ins_pstmt.setInt(2, Integer.parseInt(textFieldAge.getText()));
-					
-					ins_pstmt.setString(3, textFieldBankAccount.getText());
-					int rowsInserted = ins_pstmt.executeUpdate();
-					ins_pstmt.close();
-					refresh();
+					if (checkER(textFieldBankAccount.getText(), "^[A-Z]{2}[0-9]{22}$")) {
+						ins_pstmt.setString(3, textFieldBankAccount.getText());
+						int rowsInserted = ins_pstmt.executeUpdate();
+						ins_pstmt.close();
+						refresh();
+					} else {
+		                JOptionPane.showMessageDialog(frmBikerental, "The bank account number does not comply with the required format.", "Error", JOptionPane.ERROR_MESSAGE);
+					}
 				} catch (SQLException e) {
 					System.err.println(e.getMessage());
 					e.getErrorCode();
@@ -277,7 +285,7 @@ public class BikeRental {
 		frmBikerental.getContentPane().add(btnAddBike);
 
 		lblCoduser = new JLabel("CodUser:");
-		lblCoduser.setBounds(642, 346, 70, 15);
+		lblCoduser.setBounds(525, 346, 70, 15);
 		frmBikerental.getContentPane().add(lblCoduser);
 
 		textFieldCodUser = new JTextField();
@@ -286,7 +294,7 @@ public class BikeRental {
 		textFieldCodUser.setColumns(10);
 
 		lblCodbike = new JLabel("CodBike:");
-		lblCodbike.setBounds(642, 373, 70, 15);
+		lblCodbike.setBounds(525, 373, 70, 15);
 		frmBikerental.getContentPane().add(lblCodbike);
 
 		textFieldCodBike = new JTextField();
@@ -298,12 +306,29 @@ public class BikeRental {
 		btnRentBike.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				try {
-					PreparedStatement upd_pstmt = con.prepareStatement("UPDATE users SET bike = ? WHERE coduser = ?");
-					upd_pstmt.setInt(1, Integer.parseInt(textFieldCodBike.getText()));
-					upd_pstmt.setInt(2, Integer.parseInt(textFieldCodUser.getText()));
-					int rowsUpdated = upd_pstmt.executeUpdate();
-					upd_pstmt.close();
-					refresh();
+		            PreparedStatement check_pstmt = con.prepareStatement("SELECT rented FROM bikes WHERE codbike = ?");
+		            check_pstmt.setInt(1, Integer.parseInt(textFieldCodBike.getText()));
+		            ResultSet rs = check_pstmt.executeQuery();
+		            if (rs.next()) {
+		                boolean isRented = rs.getBoolean("rented");
+		                if (isRented) {
+		                    JOptionPane.showMessageDialog(null, "This bike is already rented. Please choose another bike.", "Bike Rental Error", JOptionPane.WARNING_MESSAGE);
+		                } else {
+		                	PreparedStatement updBike_pstmt = con.prepareStatement("UPDATE bikes SET rented = true WHERE codbike = ?");
+		                	updBike_pstmt.setInt(1, Integer.parseInt(textFieldCodBike.getText()));
+		                	updBike_pstmt.executeUpdate();
+		                	
+		                	
+		                	PreparedStatement upd_user_pstmt = con.prepareStatement("UPDATE users SET bike = ?, rentalStartTime = ? WHERE coduser = ?");
+		                	upd_user_pstmt.setInt(1, Integer.parseInt(textFieldCodBike.getText()));
+		                	upd_user_pstmt.setString(2, LocalDateTime.now().toString());
+		                	upd_user_pstmt.setInt(3, Integer.parseInt(textFieldCodUser.getText()));
+		                	upd_user_pstmt.executeUpdate();
+		                	upd_user_pstmt.close();
+		                	updBike_pstmt.close();
+							refresh();
+		                }
+		            }
 				} catch (SQLException e) {
 					System.err.println(e.getMessage());
 					e.getErrorCode();
@@ -313,37 +338,62 @@ public class BikeRental {
 		});
 		btnRentBike.setBounds(592, 402, 117, 25);
 		frmBikerental.getContentPane().add(btnRentBike);
+		
+		JLabel lblCost = new JLabel("");
+		lblCost.setForeground(Color.RED);
+		lblCost.setHorizontalAlignment(SwingConstants.RIGHT);
+		lblCost.setBounds(746, 439, 114, 15);
+		frmBikerental.getContentPane().add(lblCost);
 
 		btnReturnBike = new JButton("Return Bike");
 		btnReturnBike.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				try {
-					PreparedStatement upd_pstmt = con
+					
+					
+					PreparedStatement updUser_pstmt = con
 							.prepareStatement("UPDATE users SET bike = null WHERE coduser = ?");
-					upd_pstmt.setInt(1, Integer.parseInt(textFieldCodUser.getText()));
-					int rowsUpdated = upd_pstmt.executeUpdate();
-					upd_pstmt.close();
+					updUser_pstmt.setInt(1, Integer.parseInt(textFieldCodUser.getText()));
+					updUser_pstmt.executeUpdate();
+					updUser_pstmt.close();
+					PreparedStatement updBike_pstmt = con.prepareStatement("UPDATE bikes SET rented = false WHERE codbike = ?");
+					updBike_pstmt.setInt(1, Integer.parseInt(textFieldCodBike.getText()));
+					updBike_pstmt.executeQuery();
+					updBike_pstmt.close();
 					refresh();
+					
+					PreparedStatement sel_pstmt = con.prepareStatement("SELECT rentalStartTime FROM users WHERE coduser = ?");
+		            sel_pstmt.setInt(1, Integer.parseInt(textFieldCodUser.getText()));
+		            ResultSet rs = sel_pstmt.executeQuery();
+		            LocalDateTime rentalStartTime = null;
+		            if (rs.next()) {
+		                rentalStartTime = LocalDateTime.parse(rs.getString("rentalStartTime"));
+		            }
+		            sel_pstmt.close();
+		         
+		            long durationSeconds = Duration.between(rentalStartTime, LocalDateTime.now()).getSeconds();
+		            double rentalCost = durationSeconds * 0.02;
+		            lblCost.setText(rentalCost + "€");
 					
 					String[] options = {"1", "2", "3", "4", "5"};
 		            JComboBox<String> comboBox = new JComboBox<>(options);
 		            int option = JOptionPane.showOptionDialog(null, comboBox, "Select Rating",
 		                    JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, null, null);
-
 		            if (option == JOptionPane.OK_OPTION) {
-		                // Aquí puedes obtener el valor seleccionado del combo box
 		                int selectedRating = Integer.parseInt((String) comboBox.getSelectedItem());
-		                // Luego puedes actualizar el rating de la bicicleta con el valor seleccionado
-		                // y refrescar la tabla
+		                int selectedBike = Integer.parseInt(textFieldCodBike.getText());
+		                PreparedStatement upd_pstmt = con.prepareStatement("UPDATE bikes SET rating = ? WHERE codbike = ?");
+		                upd_pstmt.setInt(1, selectedRating);
+		                upd_pstmt.setInt(2, selectedBike);
+		                upd_pstmt.executeUpdate();
+		                upd_pstmt.close();
+		                refresh();
 		            }
 				} catch (SQLException e) {
 					System.err.println(e.getMessage());
 					e.getErrorCode();
 					e.printStackTrace();
 				}
-				
-				
-				
 			}
 		});
 		btnReturnBike.setBounds(743, 402, 117, 25);
@@ -356,11 +406,14 @@ public class BikeRental {
 					PreparedStatement upd_pstmt = con.prepareStatement("UPDATE users SET name = ?, age = ?, bankAccount = ? WHERE coduser = ?");
 					upd_pstmt.setString(1, textFieldName.getText());
 					upd_pstmt.setInt(2, Integer.parseInt(textFieldAge.getText()));
-					upd_pstmt.setString(3, textFieldBankAccount.getText());
-					upd_pstmt.setInt(4, selectedUser);
-					int rowsUpdated = upd_pstmt.executeUpdate();
-					upd_pstmt.close();
-					refresh();
+					if (checkER(textFieldBankAccount.getText(), "^[A-Z]{2}[0-9]{22}$")) {
+						upd_pstmt.setString(3, textFieldBankAccount.getText());
+						upd_pstmt.setInt(4, selectedUser);
+						int rowsUpdated = upd_pstmt.executeUpdate();
+						upd_pstmt.close();
+						refresh();
+					}
+	                JOptionPane.showMessageDialog(frmBikerental, "The bank account number does not comply with the required format.", "Error", JOptionPane.ERROR_MESSAGE);
 				} catch (SQLException e) {
 					System.err.println(e.getMessage());
 					e.getErrorCode();
