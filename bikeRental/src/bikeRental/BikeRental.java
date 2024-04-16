@@ -236,56 +236,6 @@ public class BikeRental {
 		model2.addColumn("Rented");
 		model2.addColumn("Rating");
 
-		try {
-			con = ConnectionSingleton.getConnection("bikeRental");
-			Statement stmt = con.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT * FROM users");
-
-			while (rs.next()) {
-				Object[] row = new Object[5];
-				row[0] = rs.getInt("coduser");
-				row[1] = rs.getString("name");
-				row[2] = rs.getInt("age");
-				row[3] = rs.getString("bankAccount");
-				row[4] = rs.getString("bike");
-				model1.addRow(row);
-			}
-
-			rs = stmt.executeQuery("SELECT * FROM bikes");
-			while (rs.next()) {
-				Object[] row2 = new Object[3];
-				row2[0] = rs.getInt("codbike");
-				row2[1] = rs.getBoolean("rented");
-				row2[2] = rs.getInt("rating");
-				model2.addRow(row2);
-			}
-
-			rs = stmt.executeQuery("SELECT coduser FROM users where bike is null");
-			while (rs.next()) {
-				int coduser = rs.getInt("coduser");
-				comboBoxCodUserRent.addItem(coduser);
-			}
-
-			rs = stmt.executeQuery("SELECT codbike FROM bikes WHERE rented is false");
-			while (rs.next()) {
-				int codbike = rs.getInt("codbike");
-				comboBoxCodBikeRent.addItem(codbike);
-			}
-
-			rs = stmt.executeQuery("SELECT coduser, bike FROM users WHERE bike IS NOT NULL");
-			while (rs.next()) {
-				int coduser = rs.getInt("coduser");
-				String bike = String.valueOf(rs.getInt("bike"));
-				comboBoxCodUserReturn.addItem(coduser);
-				lblCodBikeReturn.setText(bike);
-			}
-			
-		} catch (SQLException e) {
-			System.err.println(e.getMessage());
-			e.getErrorCode();
-			e.printStackTrace();
-		}
-
 		tableUsers = new JTable(model1);
 		tableUsers.addMouseListener(new MouseAdapter() {
 			@Override
@@ -604,5 +554,7 @@ public class BikeRental {
 		});
 		btnUpdateBike.setBounds(665, 301, 128, 25);
 		frmBikerental.getContentPane().add(btnUpdateBike);
+		
+		refresh();
 	}
 }
