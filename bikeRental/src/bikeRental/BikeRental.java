@@ -342,15 +342,15 @@ public class BikeRental {
 					PreparedStatement ins_pstmt = con
 							.prepareStatement("insert into users (name, age, bankAccount) VALUES (?, ?, ?)");
 					ins_pstmt.setString(1, textFieldName.getText());
-					ins_pstmt.setInt(2, Integer.parseInt(textFieldAge.getText()));
-					if (checkER(textFieldBankAccount.getText(), "^[A-Z]{2}[0-9]{22}$")) {
+					if ((checkER(textFieldBankAccount.getText(), "^[A-Z]{2}[0-9]{22}$") && (checkER(textFieldAge.getText(), "^[0-9]+$")))) {
+						ins_pstmt.setInt(2, Integer.parseInt(textFieldAge.getText()));
 						ins_pstmt.setString(3, textFieldBankAccount.getText());
 						ins_pstmt.executeUpdate();
 						ins_pstmt.close();
 						refresh();
 					} else {
 						JOptionPane.showMessageDialog(frmBikerental,
-								"The bank account number does not comply with the required format.", "Error",
+								"The bank account number or age does not comply with the required format.", "Error",
 								JOptionPane.ERROR_MESSAGE);
 					}
 				} catch (SQLException e) {
@@ -494,8 +494,8 @@ public class BikeRental {
 					PreparedStatement upd_pstmt = con
 							.prepareStatement("UPDATE users SET name = ?, age = ?, bankAccount = ? WHERE coduser = ?");
 					upd_pstmt.setString(1, textFieldName.getText());
-					upd_pstmt.setInt(2, Integer.parseInt(textFieldAge.getText()));
-					if (checkER(textFieldBankAccount.getText(), "^[A-Z]{2}[0-9]{22}$")) {
+					if ((checkER(textFieldBankAccount.getText(), "^[A-Z]{2}[0-9]{22}$") && (checkER(textFieldAge.getText(), "^[0-9]+$")))) {
+						upd_pstmt.setInt(2, Integer.parseInt(textFieldAge.getText()));
 						upd_pstmt.setString(3, textFieldBankAccount.getText());
 						upd_pstmt.setInt(4, selectedUser);
 						upd_pstmt.executeUpdate();
@@ -503,7 +503,7 @@ public class BikeRental {
 						refresh();
 					}
 					JOptionPane.showMessageDialog(frmBikerental,
-							"The bank account number does not comply with the required format.", "Error",
+							"The bank account number or age does not comply with the required format.", "Error",
 							JOptionPane.ERROR_MESSAGE);
 				} catch (SQLException e) {
 					System.err.println(e.getMessage());
