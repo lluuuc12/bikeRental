@@ -214,14 +214,24 @@ public class BikeRental {
 		comboBoxCodUserReturn.setBounds(756, 338, 117, 22);
 		frmBikerental.getContentPane().add(comboBoxCodUserReturn);
 
-		model1 = new DefaultTableModel();
+		model1 = new DefaultTableModel() {
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				return false;
+			}
+		};
 		model1.addColumn("Coduser");
 		model1.addColumn("Name");
 		model1.addColumn("Age");
 		model1.addColumn("Bank Account");
 		model1.addColumn("Bike");
 
-		model2 = new DefaultTableModel();
+		model2 = new DefaultTableModel(){
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				return false;
+			}
+		};
 		model2.addColumn("Codbike");
 		model2.addColumn("Rented");
 		model2.addColumn("Rating");
