@@ -479,6 +479,18 @@ public class BikeRental {
 		btnDeleteUser.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				try {
+					PreparedStatement checkStmt = con.prepareStatement("SELECT bike FROM users WHERE coduser = ?");
+		            checkStmt.setInt(1, selectedUser);
+		            ResultSet rs = checkStmt.executeQuery();
+		            if (rs.next()) {
+		                int bikeId = rs.getInt("bike");
+		                if (bikeId != 0) {
+		                    JOptionPane.showMessageDialog(frmBikerental, "This user has a rented bike and cannot be deleted.", "Error", JOptionPane.ERROR_MESSAGE);
+		                    return; 
+		                }
+		            }
+		            checkStmt.close();
+					
 					PreparedStatement dele_pstmt = con.prepareStatement("DELETE FROM users WHERE coduser = ?");
 					dele_pstmt.setInt(1, selectedUser);
 					dele_pstmt.executeUpdate();
@@ -498,6 +510,18 @@ public class BikeRental {
 		btnDeleteBike.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				try {
+					PreparedStatement checkStmt = con.prepareStatement("SELECT rented FROM bikes WHERE codbike = ?");
+		            checkStmt.setInt(1, selectedBike);
+		            ResultSet rs = checkStmt.executeQuery();
+		            if (rs.next()) {
+		                boolean rented = rs.getBoolean("rented");
+		                if (rented) {
+		                    JOptionPane.showMessageDialog(frmBikerental, "This bike is currently rented and cannot be deleted.", "Error", JOptionPane.ERROR_MESSAGE);
+		                    return; 
+		                }
+		            }
+		            checkStmt.close();
+					
 					PreparedStatement dele_pstmt = con.prepareStatement("DELETE FROM bikes WHERE codbike = ?");
 					dele_pstmt.setInt(1, selectedBike);
 					dele_pstmt.executeUpdate();
