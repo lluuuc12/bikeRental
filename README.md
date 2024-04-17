@@ -4,5 +4,5 @@ Once a bike is rented it stores the date and time it is rented and when it is re
 
 Technologies Used: 
 - Java
-- MySql 
 - Java Swing
+- MySql 
