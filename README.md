@@ -6,3 +6,6 @@ Technologies Used:
 - Java
 - Java Swing
 - MySql 
+
+Installation
+You might create a MySql server with correct params and import the database in the repository.
